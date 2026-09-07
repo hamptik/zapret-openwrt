@@ -34,13 +34,13 @@
     "immutable": false,
     "prerelease": true,
     "created_at": "2026-09-07T07:27:43Z",
-    "updated_at": "2026-09-07T08:07:07Z",
+    "updated_at": "2026-09-07T08:40:07Z",
     "published_at": "2026-09-07T08:07:05Z",
     "assets": [
       {
-        "url": "https://api.github.com/repos/hamptik/zapret-openwrt/releases/assets/548413927",
-        "id": 548413927,
-        "node_id": "RA_kwDOUQ4McM4gsCHn",
+        "url": "https://api.github.com/repos/hamptik/zapret-openwrt/releases/assets/548460832",
+        "id": 548460832,
+        "node_id": "RA_kwDOUQ4McM4gsNkg",
         "name": "zapret_v73.20260907_aarch64_cortex-a53.zip",
         "label": "",
         "uploader": {
@@ -66,11 +66,11 @@
         },
         "content_type": "application/zip",
         "state": "uploaded",
-        "size": 478462,
-        "digest": "sha256:a2fedbef57896bb33edcc4fac9e474c42f3b7ccc3d36d3e27755aefd246fb062",
-        "download_count": 1,
-        "created_at": "2026-09-07T08:07:07Z",
-        "updated_at": "2026-09-07T08:07:07Z",
+        "size": 237869,
+        "digest": "sha256:f2d87f6bfe251d78d8896991ae95912870e4a58fc874a1b1f323d06e170bd222",
+        "download_count": 0,
+        "created_at": "2026-09-07T08:40:07Z",
+        "updated_at": "2026-09-07T08:40:07Z",
         "browser_download_url": "https://github.com/hamptik/zapret-openwrt/releases/download/v73.20260907/zapret_v73.20260907_aarch64_cortex-a53.zip"
       },
       {

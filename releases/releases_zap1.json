@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-07T08:26:47Z",
+  "generated_at": "2026-09-07T08:40:18Z",
   "releases": [
     {
       "id": 383921312,
@@ -13,9 +13,9 @@
       "url": "https://github.com/hamptik/zapret-openwrt/releases/tag/v73.20260907",
       "assets": [
         {
-          "id": 548413927,
+          "id": 548460832,
           "name": "zapret_v73.20260907_aarch64_cortex-a53.zip",
-          "size": 478462,
+          "size": 237869,
           "content_type": "application/zip",
           "browser_download_url": "https://github.com/hamptik/zapret-openwrt/releases/download/v73.20260907/zapret_v73.20260907_aarch64_cortex-a53.zip"
         },
