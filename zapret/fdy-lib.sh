@@ -179,6 +179,49 @@ fdy_current_version()
 	return 0
 }
 
+# fdy_ensure_user_lists <lists_dir>
+# The upstream Windows archive ships without *-user.txt files: service.bat
+# creates them at runtime. nfqws loads every --hostlist/--hostlist-exclude/
+# --ipset/--ipset-exclude argument through load_file_nonempty() and calls
+# exit_clean(1) when the file is missing OR empty - so a missing user list
+# makes every strategy fail to start ("nfqws did not start").
+# Create the ones referenced by the converted strategies, with a comment
+# line so they are non-empty but match nothing.
+fdy_ensure_user_lists()
+{
+	local dir="$1"
+	local names name f
+	[ -d "$dir" ] || return 0
+
+	# collect *-user.txt referenced by generated strategies; fall back to
+	# the well-known set when no strategies exist yet
+	names=""
+	if [ -d "${FDY_STRAT:-$FDY_STRATEGIES}" ]; then
+		names=$( grep -oh -- '--\(hostlist\|hostlist-exclude\|ipset\|ipset-exclude\)=[^ "]*-user\.txt' \
+			"${FDY_STRAT:-$FDY_STRATEGIES}"/*.opt 2>/dev/null | sed 's/.*=//' | sed 's#.*/##' | sort -u )
+	fi
+	[ -n "$names" ] || names="list-general-user.txt
+list-exclude-user.txt
+ipset-exclude-user.txt"
+
+	for name in $names; do
+		case "$name" in
+			*-user.txt) ;;
+			*) continue ;;
+		esac
+		f="$dir/$name"
+		if [ ! -s "$f" ]; then
+			printf '%s\n' "# user list - add your own entries below (one per line)" > "$f" 2>/dev/null || {
+				log "WARNING: cannot create user list: $name"
+				continue
+			}
+			chmod 644 "$f" 2>/dev/null
+			log "user list created: $name"
+		fi
+	done
+	return 0
+}
+
 # fdy_ver_cmp <local_ver> <remote_ver> -> prints L (local older), E (equal), G (local newer)
 fdy_ver_cmp()
 {

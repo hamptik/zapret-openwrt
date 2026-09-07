@@ -153,6 +153,13 @@ do_sync()
 	if [ "$cmp_res" = "E" ]; then
 		log "already up to date: $cur"
 		echo "RESULT: (E) No update required! ($cur)"
+		# strategies may be stale (e.g. produced by an older fdy-convert.sh
+		# after a package upgrade) - always re-run the converter
+		if [ -x "$FDY_CONVERT" ] || [ -f "$FDY_CONVERT" ]; then
+			log "re-running fdy-convert.sh to refresh strategies ..."
+			sh "$FDY_CONVERT" >> "$FDY_SYNC_LOG" 2>&1 || \
+				touch_state error "fdy-convert.sh failed on re-run (kept old strategies)" >/dev/null 2>&1
+		fi
 		return 0
 	fi
 	if [ "$cmp_res" = "G" ]; then
@@ -213,6 +220,14 @@ do_sync()
 			log "user list preserved: $fname_esc"
 		done
 	fi
+
+	# 7b. create missing user lists.
+	# The Windows archive ships without *-user.txt (service.bat creates them
+	# on the fly). nfqws loads every --hostlist/--ipset argument with
+	# load_file_nonempty() and calls exit_clean(1) when the file is missing
+	# OR empty, so an absent user list kills the daemon on startup.
+	# A comment line keeps the file non-empty while matching nothing.
+	fdy_ensure_user_lists "$FDY_STAGING/lists"
 
 	# 8. version file
 	printf '%s\n' "$FDY_REL_TAG" > "$FDY_STAGING/version" || fdy_fail "cannot write version file"

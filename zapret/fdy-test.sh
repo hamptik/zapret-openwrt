@@ -317,6 +317,11 @@ apply_opt()
 		i=$((i+1))
 	done
 	log "ERROR: nfqws did not start for strategy $name"
+	# surface the daemon exit reason from the system log (procd sends
+	# the child's stderr there) - last 5 nfqws-related lines
+	logread 2>/dev/null | grep -i 'nfqws' | tail -5 | while read -r ln; do
+		log "  syslog: $ln"
+	done
 	return 1
 }
 
@@ -504,6 +509,12 @@ cmd_full()
 	total=$(printf '%s\n' "$names" | wc -l | tr -d ' ')
 	ensure_test_dirs
 	acquire_lock || exit 5
+	# self-heal: the Windows archive ships no *-user.txt, and nfqws exits
+	# when a --hostlist/--ipset file is missing or empty, which makes every
+	# strategy fail to start. Create them before touching any strategy.
+	if command -v fdy_ensure_user_lists >/dev/null 2>&1; then
+		fdy_ensure_user_lists "$FDY_ZAPRET_BASE/fdy/current/lists"
+	fi
 	: > "$LIVE_LOG"
 	started=$(now_iso)
 	SCORE_FILE="/tmp/fdy_scores.$$.txt"
