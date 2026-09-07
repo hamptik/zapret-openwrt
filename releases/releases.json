@@ -68,7 +68,7 @@
         "state": "uploaded",
         "size": 478462,
         "digest": "sha256:a2fedbef57896bb33edcc4fac9e474c42f3b7ccc3d36d3e27755aefd246fb062",
-        "download_count": 0,
+        "download_count": 1,
         "created_at": "2026-09-07T08:07:07Z",
         "updated_at": "2026-09-07T08:07:07Z",
         "browser_download_url": "https://github.com/hamptik/zapret-openwrt/releases/download/v73.20260907/zapret_v73.20260907_aarch64_cortex-a53.zip"
