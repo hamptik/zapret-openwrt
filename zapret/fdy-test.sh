@@ -290,7 +290,12 @@ service_ok()
 # apply_opt <name> -> 0 ok
 apply_opt()
 {
-	local name=$1 optf="$FDY_STRAT/$name.opt" i
+	# NOTE: busybox ash evaluates all assignments in a single `local`
+	# statement before any of them takes effect, so dependent values
+	# must be assigned in separate statements
+	local name=$1
+	local optf="$FDY_STRAT/$name.opt"
+	local i
 	[ -f "$optf" ] || { log "ERROR: strategy file not found: $optf"; return 2; }
 	if [ "${FDY_NOAPPLY:-0}" = "1" ]; then
 		log "selftest: skip apply $name"

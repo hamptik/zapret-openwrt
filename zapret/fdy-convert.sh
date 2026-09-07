@@ -80,8 +80,10 @@ for f in "$CUR"/general*.bat; do
 	base=${base%.bat}
 
 	# safe file name: lower, space -> __, () dropped, rest of junk -> _
+	# NOTE: busybox is often built without tr character classes, so use
+	# explicit A-Z/a-z ranges instead of [:upper:]/[:lower:]
 	safe=$(printf '%s' "$base" \
-		| tr '[:upper:]' '[:lower:]' \
+		| tr 'A-Z' 'a-z' \
 		| sed -e 's/ /__/g' -e 's/[()]//g' -e 's/[^a-z0-9._-]/_/g')
 	if [ -z "$safe" ]; then
 		errors=$((errors + 1))
