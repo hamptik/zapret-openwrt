@@ -257,9 +257,19 @@ run_targets()
 	rm -f "$outfile"
 	[ -f "$TARGETS_FILE" ] || default_targets
 	while IFS= read -r line; do
-		case "$line" in ''|'#'*) continue ;; esac
-		tname=$(printf '%s' "$line" | sed -n 's/^[[:space:]]*\([A-Za-z0-9_]*\)[[:space:]]*=.*/\1/p')
-		tvalue=$(printf '%s' "$line" | sed -n 's/^[[:space:]]*[A-Za-z0-9_]*[[:space:]]*=[[:space:]]*"\(.*\)".*/\1/p')
+		# strip CR (files may come from the Windows repo) and skip
+		# blank/comment lines, including indented comments
+		line=$(printf '%s' "$line" | tr -d '\r')
+		case "$(printf '%s' "$line" | sed 's/^[[:space:]]*//')" in
+			''|'#'*) continue ;;
+		esac
+		# Target names may contain spaces and dots ("Cloudflare DNS 1.1.1.1
+		# = ..." - the format used by Flowseal's targets.txt), so match
+		# everything before '=' and sanitize it into a valid shell
+		# variable suffix, because the name is used as one.
+		tname=$(printf '%s' "$line" | sed -n 's/^[[:space:]]*\([^=]*[^=[:space:]]\)[[:space:]]*=.*/\1/p')
+		tname=$(printf '%s' "$tname" | sed -e 's/[^A-Za-z0-9_]/_/g' -e 's/__*/_/g' -e 's/_$//')
+		tvalue=$(printf '%s' "$line" | sed -n 's/^[^=]*=[[:space:]]*"\(.*\)".*/\1/p')
 		[ -n "$tname" ] && [ -n "$tvalue" ] || continue
 		names="$names $tname"
 		eval "FDY_TVAL_$tname=\"\$tvalue\""
@@ -429,9 +439,17 @@ score_strategy()
 {
 	# $1 name; reads $TARGET_RES -> prints "<score> <ok> <err> <unsup> <ping_ok>"
 	local name=$1 line ok=0 errc=0 unsup=0 pingok=0 score
+	# no probe wrote anything (e.g. every target failed to spawn): report a
+	# zero score instead of dying on a missing file
+	if [ ! -f "$TARGET_RES" ]; then
+		log "WARNING: no target results for $name (probe file missing)"
+		printf '0 0 0 0 0'
+		return 0
+	fi
 	while read -r line; do
 		set -- $line
 		# name ok err unsup ping
+		[ $# -ge 5 ] || continue
 		ok=$((ok + $2))
 		errc=$((errc + $3))
 		unsup=$((unsup + $4))
