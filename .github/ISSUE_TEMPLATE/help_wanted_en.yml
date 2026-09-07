@@ -9,8 +9,8 @@ body:
     attributes:
       value: |
         Before sending, please:
-        - Check [existing issues](https://github.com/remittor/zapret-openwrt/issues)
-        - Read [documentation](https://github.com/remittor/zapret-openwrt/wiki/)
+        - Check [existing issues](https://github.com/hamptik/zapret-openwrt/issues)
+        - Read [documentation](https://github.com/hamptik/zapret-openwrt/wiki/)
 
   - type: textarea
     id: description

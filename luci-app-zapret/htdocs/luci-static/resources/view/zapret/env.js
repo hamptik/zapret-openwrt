@@ -27,7 +27,7 @@ return baseclass.extend({
                           'https://github.com/bol-van/zapret/blob/b251ea839cc8f04c45090314ef69fce69f2c00f2/init.d/custom.d.examples.linux/50-stun4all',
                           'https://github.com/bol-van/zapret/tree/master/init.d/custom.d.examples.linux'
                         ],
-    nfqws_opt_url     : 'https://github.com/remittor/zapret-openwrt/discussions/168',
+    nfqws_opt_url     : 'https://github.com/hamptik/zapret-openwrt/discussions/168',
 
     autoHostListFN    : '/opt/zapret/ipset/zapret-hosts-auto.txt',
     autoHostListDbgFN : '/opt/zapret/ipset/zapret-hosts-auto-debug.log',

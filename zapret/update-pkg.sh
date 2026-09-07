@@ -54,10 +54,10 @@ fi
 ZAP_CPU_ARCH="$DISTRIB_ARCH"
 
 if [ $ZAPRET_CFG_NAME = "zapret" ]; then
-	ZAP_REL_URL="https://raw.githubusercontent.com/remittor/zapret-openwrt/gh-pages/releases/releases_zap1_$ZAP_CPU_ARCH.json"
+	ZAP_REL_URL="https://raw.githubusercontent.com/hamptik/zapret-openwrt/gh-pages/releases/releases_zap1_$ZAP_CPU_ARCH.json"
 fi
 if [ $ZAPRET_CFG_NAME = "zapret2" ]; then
-	ZAP_REL_URL="https://raw.githubusercontent.com/remittor/zapret-openwrt/gh-pages/releases/releases_zap2_$ZAP_CPU_ARCH.json"
+	ZAP_REL_URL="https://raw.githubusercontent.com/hamptik/zapret-openwrt/gh-pages/releases/releases_zap2_$ZAP_CPU_ARCH.json"
 fi
 CURL_TIMEOUT=5
 CURL_HEADER1="Accept: application/json"

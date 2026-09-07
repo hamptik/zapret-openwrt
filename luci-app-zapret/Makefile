@@ -8,7 +8,7 @@ PKG_NAME:=luci-app-zapret
 PKG_VERSION:=73.20260907
 PKG_RELEASE:=1
 PKG_LICENSE:=MIT
-PKG_MAINTAINER:=remittor <https://github.com/remittor>
+PKG_MAINTAINER:=hamptik <https://github.com/hamptik>
 
 LUCI_TITLE:=LuCI support for zapret
 LUCI_DEPENDS:=+zapret

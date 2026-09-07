@@ -9,8 +9,8 @@ body:
     attributes:
       value: |
         Before sending, please:
-        - Check [existing requests](https://github.com/remittor/zapret-openwrt/issues?q=is%3Aissue+label%3Aenhancement)
-        - Make sure the function doesn't exist in [documentation](https://github.com/remittor/zapret-openwrt/wiki/)
+        - Check [existing requests](https://github.com/hamptik/zapret-openwrt/issues?q=is%3Aissue+label%3Aenhancement)
+        - Make sure the function doesn't exist in [documentation](https://github.com/hamptik/zapret-openwrt/wiki/)
 
   - type: textarea
     id: summary

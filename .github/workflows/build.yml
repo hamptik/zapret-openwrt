@@ -38,8 +38,8 @@ env:
   MAX_SPEED: ${{ github.event.inputs.max_speed != 'false' }}
   TAG_SUFFIX: ${{ github.event.inputs.fake_build == 'true' && '-fake' || github.event.inputs.test_build == 'true' && '-test' || '' }}
   REPO_NAME: zapret-openwrt
-  REPO_URL: https://github.com/remittor/zapret-openwrt
-  REPO_LNK: remittor/zapret-openwrt
+  REPO_URL: https://github.com/hamptik/zapret-openwrt
+  REPO_LNK: hamptik/zapret-openwrt
   REPO_BRANCH: master
   PKGDIR: ${{ github.workspace }}/zapret-openwrt
   SDKDIR: /builder

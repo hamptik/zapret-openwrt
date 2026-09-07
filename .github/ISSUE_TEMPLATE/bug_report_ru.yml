@@ -11,8 +11,8 @@ body:
         Спасибо за создание отчета об ошибке!
         
         Перед отправкой, пожалуйста:
-        - Проверьте [существующие issues](https://github.com/remittor/zapret-openwrt/issues)
-        - Просмотрите [документацию](https://github.com/remittor/zapret-openwrt/wiki/)
+        - Проверьте [существующие issues](https://github.com/hamptik/zapret-openwrt/issues)
+        - Просмотрите [документацию](https://github.com/hamptik/zapret-openwrt/wiki/)
 
   - type: textarea
     id: description

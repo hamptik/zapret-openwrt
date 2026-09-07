@@ -1,6 +1,6 @@
 #!/bin/sh
 # fdy-sync.sh - sync the Flowseal "zapret-discord-youtube" distributive with
-# upstream GitHub releases, for the zapret-openwrt package (remittor).
+# upstream GitHub releases, for the zapret-openwrt package.
 #
 # Flow:
 #   fetch release info (api.github.com, optional mirror prefix)

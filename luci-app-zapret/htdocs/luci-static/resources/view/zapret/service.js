@@ -416,7 +416,7 @@ return view.extend({
         }
         
         let url1 = 'https://github.com/bol-van/'+tools.appName;
-        let url2 = 'https://github.com/remittor/zapret-openwrt';
+        let url2 = 'https://github.com/hamptik/zapret-openwrt';
 
         return E([
             E('h2', { 'class': 'fade-in' }, page_title),
