@@ -6,7 +6,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=luci-app-zapret
 PKG_VERSION:=73.20260907
-PKG_RELEASE:=3
+PKG_RELEASE:=4
 PKG_LICENSE:=MIT
 PKG_MAINTAINER:=hamptik <https://github.com/hamptik>
 

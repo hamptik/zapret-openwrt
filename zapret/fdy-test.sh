@@ -33,6 +33,8 @@ FDY_RESULTS="$FDY_BASE/results"
 FDY_TEST_LOG="$FDY_BASE/logs/test.log"
 LIVE_LOG="/tmp/fdy_test_live.log"
 LOCK_DIR="/tmp/fdy_test.lock"
+# presence of this file asks a running test to stop at the next safe point
+STOP_FILE="$LOCK_DIR/stop"
 BACKUP_FILE="/tmp/fdy_backup_orig.sh"
 
 # --- fallback minimal log() when fdy-lib.sh is absent (selftest on a PC) ---
@@ -420,8 +422,50 @@ release_lock()
 	return 0
 }
 
+# stop_requested -> 0 when the user asked the running test to stop
+stop_requested()
+{
+	[ -f "$STOP_FILE" ]
+}
+
+# cmd_stop [--force] - ask a running test to stop (called by LuCI / CLI)
+cmd_stop()
+{
+	local pid=""
+	local force="${1:-}"
+	if [ ! -d "$LOCK_DIR" ]; then
+		printf '%s\n' "no test run is active"
+		FINISHED=1
+		return 0
+	fi
+	# raise the flag: the loop checks it at every strategy boundary and
+	# during the nfqws start wait, then exits cleanly - applying the best
+	# strategy found so far instead of dropping the results
+	: > "$STOP_FILE" 2>/dev/null
+	# this invocation only signals the running test; it owns neither the
+	# lock nor the config backup, so the EXIT trap must not touch them
+	FINISHED=1
+	pid=$(cat "$LOCK_DIR/pid" 2>/dev/null)
+	if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
+		if [ "$force" = "--force" ]; then
+			# hard stop: the EXIT trap still restores the original
+			# config, but partial results are discarded
+			printf '%s\n' "force-stopping test run (pid $pid)"
+			kill -TERM "$pid" 2>/dev/null
+			return 0
+		fi
+		printf '%s\n' "stop requested for test run (pid $pid) - finishing current strategy"
+		return 0
+	fi
+	# stale lock (process already gone): clean it up so the next run works
+	printf '%s\n' "no running test found, clearing stale lock"
+	rm -rf "$LOCK_DIR" 2>/dev/null
+	return 0
+}
+
 FINISHED=0
 ABORTED=0
+STOPPED=0
 on_exit()
 {
 	if [ "$FINISHED" != "1" ]; then
@@ -542,6 +586,11 @@ cmd_full()
 	live "WARNING: internet in LAN will briefly drop on every strategy switch"
 	backup_orig
 	for n in $names; do
+		if stop_requested; then
+			live "STOP requested by user - aborting after $i/$total strategies"
+			STOPPED=1
+			break
+		fi
 		i=$((i+1))
 		live "=== [$i/$total] $n ==="
 		if apply_opt "$n"; then
@@ -565,17 +614,27 @@ cmd_full()
 		live "$line"
 	done < "$SCORE_FILE"
 	if [ "$best_score" -le 0 ] || [ -z "$best" ]; then
-		live "no working strategy found - restoring original config"
+		if [ "${STOPPED:-0}" = "1" ]; then
+			live "stopped before any strategy scored - restoring original config"
+		else
+			live "no working strategy found - restoring original config"
+		fi
 		restore_orig
 		finished=$(now_iso)
-		write_last_json "$started" "$finished" "" 0 0 "no strategy scored above zero"
+		if [ "${STOPPED:-0}" = "1" ]; then
+			write_last_json "$started" "$finished" "" 0 0 "stopped by user before any strategy scored"
+		else
+			write_last_json "$started" "$finished" "" 0 0 "no strategy scored above zero"
+		fi
 		report_file="$FDY_RESULTS/test_$(date '+%Y%m%d_%H%M%S').txt"
 		cp "$SCORE_FILE" "$report_file" 2>/dev/null
 		rm -f "$SCORE_FILE" "$TARGET_RES"
 		FINISHED=1
+		[ "${STOPPED:-0}" = "1" ] && { live "END rc=130 (stopped)"; exit 130; }
 		live "END rc=1"
 		exit 1
 	fi
+	[ "${STOPPED:-0}" = "1" ] && live "stopped early - applying best of the $i tested strategies"
 	live "Best config: $best (score $best_score)"
 	if apply_opt "$best"; then
 		# mark applied in score file
@@ -676,9 +735,12 @@ case "${1:-}" in
 	--selftest)
 		cmd_selftest
 		;;
+	--stop)
+		cmd_stop "${2:-}"
+		;;
 	-h|--help|'')
 		[ -z "${1:-}" ] || cat <<'EOF'
-usage: fdy-test.sh [--apply <name>|--single <name>|--selftest]
+usage: fdy-test.sh [--apply <name>|--single <name>|--selftest|--stop [--force]]
 EOF
 		[ -z "${1:-}" ] && cmd_full
 		;;

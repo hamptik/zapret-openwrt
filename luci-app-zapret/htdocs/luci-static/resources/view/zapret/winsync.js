@@ -23,6 +23,7 @@
 const btn_style_neutral  = 'btn';
 const btn_style_action   = 'btn cbi-button-action';
 const btn_style_positive = 'btn cbi-button-save important';
+const btn_style_negative = 'btn cbi-button-reset important';
 const btn_style_warning  = 'btn cbi-button-negative';
 
 const fdy_dir          = tools.appDir + '/fdy';
@@ -377,6 +378,8 @@ return view.extend({
                 this.POLL.stop();
                 if (rc == 0) {
                     this.appendLog(_('Tests finished.'));
+                } else if (rc == 130) {
+                    this.appendLog(_('Tests stopped by user.'));
                 } else {
                     this.appendLog(_('Tests finished with errors') + ' (rc = ' + rc + ')');
                 }
@@ -384,6 +387,51 @@ return view.extend({
                 this.refreshAll();
             },
             ctx: this,
+        });
+    },
+
+    actionStopTests: function(force) {
+        let args = force ? [ '--stop', '--force' ] : [ '--stop' ];
+        this.appendLog(force ? _('Force-stopping tests...')
+                             : _('Stop requested: finishing the current strategy...'));
+        return fs.exec(fn_fdy_test_sh, args).then(res => {
+            let out = (res.stdout || '').trim();
+            if (out)
+                this.appendLog(out);
+            if (res.code != 0)
+                this.appendLog(_('Stop request failed') + ' (rc = ' + res.code + ')');
+        }).catch(err => {
+            this.appendLog(_('Stop request failed') + ': ' + err);
+        });
+    },
+
+    confirmStopTests: function() {
+        return new Promise((resolve) => {
+            ui.showModal(_('Stop tests'), [
+                E('p', {}, _('The current strategy will be finished, then the best strategy found so far is applied. If none scored, the original config is restored.')),
+                E('div', { 'class': 'right' }, [
+                    E('button', {
+                        'class': 'btn',
+                        'click': ui.hideModal,
+                    }, _('Cancel')),
+                    ' ',
+                    E('button', {
+                        'class': btn_style_warning,
+                        'click': ui.createHandlerFn(this, function() {
+                            ui.hideModal();
+                            return this.actionStopTests(true).then(resolve);
+                        }),
+                    }, _('Stop now (discard results)')),
+                    ' ',
+                    E('button', {
+                        'class': btn_style_negative,
+                        'click': ui.createHandlerFn(this, function() {
+                            ui.hideModal();
+                            return this.actionStopTests(false).then(resolve);
+                        }),
+                    }, _('Stop gracefully')),
+                ])
+            ]);
         });
     },
 
@@ -620,8 +668,13 @@ return view.extend({
         let btn_test = create_btn('btn_fdy_test', btn_style_positive, _('Run tests'));
         btn_test.onclick = ui.createHandlerFn(this, this.confirmRunTests);
 
+        let btn_stop = create_btn('btn_fdy_stop', btn_style_negative, _('Stop tests'));
+        btn_stop.onclick = ui.createHandlerFn(this, this.confirmStopTests);
+
         layout_append(_('Flowseal sync control'), null, [ btn_check, btn_sync ]);
-        layout_append(_('Strategies test'), _('The test runs all strategies and may interrupt the Internet connection.'), [ btn_test ]);
+        layout_append(_('Strategies test'), _('The test runs all strategies and may interrupt the Internet connection.') + ' ' +
+                      _('Stop finishes the current strategy, then applies the best one found so far (or restores the original config).'),
+                      [ btn_test, btn_stop ]);
 
         this.setStatus(status_data);
         this.renderStrategies(status_data);
