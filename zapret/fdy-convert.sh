@@ -27,14 +27,13 @@ errf="$STRAT/.err.conv.$$"
 names_tmp="$STRAT/.names.tmp.$$"
 trap 'rm -f "$tmpf" "$errf" "$names_tmp"' EXIT INT TERM
 
-# optional shared lib (thread 1); fallback log() if it does not provide one.
+# optional shared lib; fallback log() if it does not provide one.
 # NOTE: plain `type log` also matches external binaries (macOS /usr/bin/log,
 # OpenWrt log applet). Match the word "function": busybox/bash say
 # "log is a function", dash says "log is a shell function".
-if [ -f "$FDY_BASE/fdy-lib.sh" ]; then
-	. "$FDY_BASE/fdy-lib.sh"
-elif [ -f /opt/zapret/fdy-lib.sh ]; then
-	. /opt/zapret/fdy-lib.sh
+FDY_LIB="${FDY_LIB:-${FDY_ZAPRET_BASE:-/opt/zapret}/fdy-lib.sh}"
+if [ -f "$FDY_LIB" ]; then
+	. "$FDY_LIB"
 fi
 case "$(type log 2>/dev/null)" in
 	*function*) ;;
@@ -185,8 +184,8 @@ for f in "$CUR"/general*.bat; do
 		for (k = 1; k <= nudp; k++) pu = pu (k > 1 ? "," : "") udpp[k]
 		print "# FDY_STRATEGY_V1"
 		print "# NAME=" name
-		print "# PORTS_TCP=" pt
-		print "# PORTS_UDP=" pu
+		print "NFQWS_PORTS_TCP=\"" pt "\""
+		print "NFQWS_PORTS_UDP=\"" pu "\""
 		print "NFQWS_OPT=\"" opt "\""
 	}
 	' "$f" > "$tmpf" 2> "$errf" && [ -s "$tmpf" ]; then

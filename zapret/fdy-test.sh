@@ -49,17 +49,21 @@ fi
 # --------------------------------------------------------------------------------------------------
 # defaults / uci config
 
+# fdy_test_uci_default <uci_option> <default> [var_name]
+# reads uci fdy.test.<uci_option>, creating the section/option with the default
+# on first run; assigns to ${var_name:-<uci_option uppercased>}
 fdy_test_uci_default()
 {
-	local opt=$1 def=$2 val
-	command -v uci >/dev/null 2>&1 || { eval "$opt=\$def"; return 0; }
+	local opt=$1 def=$2 var=${3:-$(printf '%s' "$1" | tr 'a-z' 'A-Z')}
+	local val
+	command -v uci >/dev/null 2>&1 || { eval "$var=\$def"; return 0; }
 	uci -q show fdy.test >/dev/null 2>&1 || uci set fdy.test=test
 	val=$(uci -q get "fdy.test.$opt" 2>/dev/null)
 	if [ "$val" = "" ]; then
 		uci set "fdy.test.$opt=$def" && uci -q commit fdy
 		val=$def
 	fi
-	eval "$opt=\$val"
+	eval "$var=\$val"
 	return 0
 }
 
@@ -68,10 +72,10 @@ START_WAIT=6
 MAX_PARALLEL=8
 TARGETS_FILE="$FDY_BASE/targets.txt"
 [ -f "$FDY_ZAPRET_BASE/fdy-lib.sh" ] && {
-	fdy_test_uci_default curl_timeout 4
-	fdy_test_uci_default start_wait 6
-	fdy_test_uci_default max_parallel 8
-	fdy_test_uci_default targets "$FDY_BASE/targets.txt"
+	fdy_test_uci_default curl_timeout 4 CURL_TIMEOUT
+	fdy_test_uci_default start_wait 6 START_WAIT
+	fdy_test_uci_default max_parallel 8 MAX_PARALLEL
+	fdy_test_uci_default targets "$FDY_BASE/targets.txt" TARGETS_FILE
 }
 case "$CURL_TIMEOUT" in ''|*[!0-9]*) CURL_TIMEOUT=4 ;; esac
 case "$START_WAIT" in ''|*[!0-9]*) START_WAIT=6 ;; esac
@@ -314,6 +318,7 @@ apply_opt()
 backup_orig()
 {
 	[ "${FDY_NOAPPLY:-0}" = "1" ] && return 0
+	rm -f "$BACKUP_FILE" "$BACKUP_FILE.stamp"
 	local o t u
 	o=$(uci -q get zapret.config.NFQWS_OPT 2>/dev/null)
 	t=$(uci -q get zapret.config.NFQWS_PORTS_TCP 2>/dev/null)
@@ -323,13 +328,19 @@ backup_orig()
 		printf "FDY_BAK_TCP='%s'\n" "$(printf '%s' "$t" | sed -e "s/'/'\\\\''/g")"
 		printf "FDY_BAK_UDP='%s'\n" "$(printf '%s' "$u" | sed -e "s/'/'\\\\''/g")"
 	} > "$BACKUP_FILE"
+	# stamp: only the process that wrote the backup may restore it
+	printf '%s\n' "$$" > "$BACKUP_FILE.stamp"
 	return 0
 }
 
 restore_orig()
 {
 	[ "${FDY_NOAPPLY:-0}" = "1" ] && return 0
-	[ -f "$BACKUP_FILE" ] || return 0
+	[ -f "$BACKUP_FILE" ] || { live "no backup to restore (config left unchanged)"; return 1; }
+	if [ -f "$BACKUP_FILE.stamp" ] && [ "$(cat "$BACKUP_FILE.stamp" 2>/dev/null)" != "$$" ]; then
+		live "stale backup ignored (written by another run, pid $(cat "$BACKUP_FILE.stamp"))"
+		return 1
+	fi
 	. "$BACKUP_FILE"
 	uci set zapret.config.NFQWS_OPT="$FDY_BAK_OPT" 2>/dev/null
 	uci set zapret.config.NFQWS_PORTS_TCP="$FDY_BAK_TCP" 2>/dev/null
@@ -337,7 +348,7 @@ restore_orig()
 	uci -q commit zapret 2>/dev/null
 	[ -f "$FDY_ZAPRET_BASE/sync_config.sh" ] && sh "$FDY_ZAPRET_BASE/sync_config.sh" >/dev/null 2>&1
 	/etc/init.d/zapret restart >/dev/null 2>&1
-	rm -f "$BACKUP_FILE"
+	rm -f "$BACKUP_FILE" "$BACKUP_FILE.stamp"
 	live "original config restored"
 	return 0
 }
@@ -375,12 +386,17 @@ acquire_lock()
 		return 1
 	}
 	printf '%s\n' $$ > "$LOCK_DIR/pid" 2>/dev/null
+	I_OWN_LOCK=1
 	return 0
 }
 
 release_lock()
 {
+	# only the owner may remove the lock; a failed acquire must not
+	# destroy the incumbent's lock on its way out
+	[ "${I_OWN_LOCK:-0}" = "1" ] || return 0
 	rm -rf "$LOCK_DIR" 2>/dev/null
+	I_OWN_LOCK=0
 	return 0
 }
 
@@ -422,9 +438,12 @@ cmd_apply()
 	local name=$1
 	service_ok || { printf '%s\n' "ERROR: /etc/init.d/zapret not found"; exit 2; }
 	[ -f "$FDY_STRAT/$name.opt" ] || { printf '%s\n' "ERROR: unknown strategy: $name"; exit 2; }
+	ensure_test_dirs
+	backup_orig
 	if apply_opt "$name"; then
 		live "strategy $name applied and running"
 		printf '%s\n' "OK: strategy $name applied"
+		rm -f "$BACKUP_FILE" "$BACKUP_FILE.stamp"
 		exit 0
 	else
 		live "ERROR: strategy $name failed to start - restoring original"
@@ -460,7 +479,6 @@ cmd_single()
 	fi
 	restore_orig
 	finished=$(now_iso)
-	printf '%s %s false\n' "$name $(score_strategy "$name")" >> /dev/null
 	{
 		printf 'SINGLE TEST %s\n  strategy: %s\n  result: %s\n' "$(now_iso)" "$name" "$(score_strategy "$name")"
 	} >> "$FDY_RESULTS/single_${name}.txt"
@@ -502,7 +520,7 @@ cmd_full()
 				best="$n"; best_score=$1; best_err=$3
 			fi
 		else
-			printf '%s 0 0 0 0 false\n' "$n" >> "$SCORE_FILE"
+			printf '%s 0 0 0 0 0 false\n' "$n" >> "$SCORE_FILE"
 			live "$n : START FAILED (score=0)"
 		fi
 		rm -f "$TARGET_RES"
@@ -526,13 +544,11 @@ cmd_full()
 	fi
 	live "Best config: $best (score $best_score)"
 	if apply_opt "$best"; then
-		sed -i.bak "s/^$best /X/" /dev/null 2>/dev/null
 		# mark applied in score file
 		awk -v b="$best" '
 			$1 == b { $7 = "true" }
 			{ print }
 		' "$SCORE_FILE" > "$SCORE_FILE.new" && mv "$SCORE_FILE.new" "$SCORE_FILE"
-		rm -f "$SCORE_FILE.bak" 2>/dev/null
 		live "strategy $best applied"
 	else
 		live "ERROR: best strategy failed to apply - restoring original"

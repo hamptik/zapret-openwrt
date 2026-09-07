@@ -105,8 +105,8 @@ config fdy 'general'
 | `fdy.sync.enabled` | `0` | включить автообновление релизов Flowseal |
 | `fdy.sync.time` | `04:30` | время ежедневного запуска `HH:MM` (влияет на строку cron) |
 | `fdy.sync.mirror` | *(пусто)* | зеркало для скачивания; пусто = официальный GitHub |
-| `fdy.sync.autotest` | `1` | после синка запускать fdy-test и применять лучшую стратегию |
-| `fdy.sync.restart_after` | `1` | перезапускать zapret после применения новой стратегии |
+| `fdy.sync.autotest` | `0` | после синка запускать fdy-test и применять лучшую стратегию |
+| `fdy.sync.restart_after` | `0` | перезапускать zapret после применения новой стратегии |
 
 ### fdy.test — тестирование
 
@@ -121,14 +121,14 @@ config fdy 'general'
 
 | Опция | Дефолт | Описание |
 |---|---|---|
-| `fdy.general.gamefilter` | `0` | `1` = nfqws обрабатывает диапазон портов `1024-65535` («игровые» порты). Заметно нагружает CPU на слабых роутерах |
+| `fdy.general.gamefilter` | `off` | `all`/`tcp`/`udp` = nfqws обрабатывает диапазон портов `1024-65535` («игровые» порты). Заметно нагружает CPU на слабых роутерах |
 
 Пример включения:
 
 ```
-uci set zapret.sync.enabled='1'
-uci set zapret.sync.time='05:00'
-uci commit zapret
+uci set fdy.sync.enabled='1'
+uci set fdy.sync.time='05:00'
+uci commit fdy
 ```
 
 ## Cron
@@ -149,7 +149,7 @@ vi /etc/crontabs/root        # или crontab -e
 Ручной запуск с выводом в консоль — без параметра `--cron`:
 
 ```
-/opt/zapret/fdy-sync.sh
+/opt/zapret/fdy-sync.sh --force
 ```
 
 ## Сценарии отказа

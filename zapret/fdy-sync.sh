@@ -62,6 +62,10 @@ do_check()
 		echo "RESULT: (L) $FDY_REL_TAG"
 		return 0
 	fi
+	if [ "$FDY_REL_TAG" = "" ]; then
+		echo "ERROR: empty release tag from GitHub API"
+		return 1
+	fi
 	echo "Installed version: $cur"
 	cmp_res=$( fdy_ver_cmp "$cur" "$FDY_REL_TAG" )
 	case "$cmp_res" in
@@ -141,6 +145,9 @@ do_sync()
 		log "no current version installed, performing initial install"
 		cmp_res="L"
 	else
+		if [ "$FDY_REL_TAG" = "" ]; then
+			fdy_fail "empty release tag from GitHub API"
+		fi
 		cmp_res=$( fdy_ver_cmp "$cur" "$FDY_REL_TAG" )
 	fi
 	if [ "$cmp_res" = "E" ]; then

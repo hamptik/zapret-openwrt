@@ -118,6 +118,7 @@ define Package/$(PKG_NAME)/install
 	$(INSTALL_DIR) $(1)$(ZAPRET_DIR)/init.d/openwrt/custom.d
 	$(INSTALL_DIR) $(1)/etc/uci-defaults
 	$(INSTALL_BIN) ./uci-def-cfg.sh     $(1)/etc/uci-defaults/zapret-uci-def-cfg.sh
+	$(INSTALL_BIN) ./uci-def-fdy-cfg.sh $(1)/etc/uci-defaults/zapret-uci-def-fdy-cfg.sh
 	# install all sh-scripts
 	$(CP) ./*.sh $(1)$(ZAPRET_DIR)/
 	rm -f $(1)$(ZAPRET_DIR)/init.d.sh
@@ -278,6 +279,7 @@ if [ -z "$${IPKG_INSTROOT}" ]; then
 	[ "$${ZAPRET_CFG_EXISTS}" = "1" ] && echo "Config /etc/config/zapret merged with default uci-config"
 	# remove uci-default script from system dir (used into /etc/init.d/boot)
 	rm -f /etc/uci-defaults/zapret-uci-def-cfg.sh
+	rm -f /etc/uci-defaults/zapret-uci-def-fdy-cfg.sh
 	# copy (sync) all params from uci-config to main config
 	/opt/zapret/sync_config.sh
 	# check main config

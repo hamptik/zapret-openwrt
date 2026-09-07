@@ -344,7 +344,7 @@ return view.extend({
     actionSyncNow: function(ev) {
         this.appendLog(_('Syncing with Flowseal releases...'));
         return tools.execAndRead({
-            cmd: [ fn_fdy_sync_sh ],
+            cmd: [ fn_fdy_sync_sh, '--force' ],
             log: fdy_sync_log,
             logArea: this.logArea,
             callback: (rc, txt = '') => {
