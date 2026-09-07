@@ -121,82 +121,64 @@ jobs:
           echo "is_active=$is_active" >> $GITHUB_OUTPUT
 
   var:
-    runs-on: ubuntu-24.04 
+    runs-on: ubuntu-24.04
     outputs:
       IPK_BRANCH: ${{ steps.set.outputs.IPK_BRANCH }}
       APK_BRANCH: ${{ steps.set.outputs.APK_BRANCH }}
       XXX_BRANCH: ${{ steps.set.outputs.XXX_BRANCH }}
+      matrix: ${{ steps.set.outputs.matrix }}
     steps:
       - id: set
+        env:
+          ARCH_FILTER: ${{ inputs.arch }}
+          PKGTYPE: ${{ inputs.pkgtype }}
         run: |
-          echo "IPK_BRANCH=v24.10.5" >> "$GITHUB_OUTPUT"
-          echo "APK_BRANCH=v25.12.0" >> "$GITHUB_OUTPUT"
+          IPK="v24.10.5"
+          APK="v25.12.0"
+          echo "IPK_BRANCH=$IPK" >> "$GITHUB_OUTPUT"
+          echo "APK_BRANCH=$APK" >> "$GITHUB_OUTPUT"
           echo "XXX_BRANCH=SNAPSHOT" >> "$GITHUB_OUTPUT"
+          ARCHS_FULL="aarch64_cortex-a53 aarch64_cortex-a72 aarch64_cortex-a76 aarch64_generic arm_arm1176jzf-s_vfp arm_arm926ej-s arm_cortex-a15_neon-vfpv4 arm_cortex-a5_vfpv4 arm_cortex-a7 arm_cortex-a7_neon-vfpv4 arm_cortex-a7_vfpv4 arm_cortex-a8_vfpv3 arm_cortex-a9 arm_cortex-a9_neon arm_cortex-a9_vfpv3-d16 arm_fa526 arm_xscale mips64_octeonplus mips_24kc mips_4kec mips_mips32 mipsel_24kc mipsel_24kc_24kf mipsel_74kc mipsel_mips32 riscv64_generic x86_64"
+          # selective build: workflow_dispatch filters (tag pushes have
+          # empty inputs -> full matrix)
+          case "$PKGTYPE" in
+            ipk) BRANCHES="$IPK" ;;
+            apk) BRANCHES="$APK" ;;
+            *)   BRANCHES="$IPK $APK" ;;
+          esac
+          ARCHS="$ARCHS_FULL"
+          if [ -n "$ARCH_FILTER" ]; then
+            if ! printf '%s\n' $ARCHS_FULL | grep -qx "$ARCH_FILTER"; then
+              echo "ERROR: unknown arch '$ARCH_FILTER'; valid: $ARCHS_FULL"
+              exit 1
+            fi
+            ARCHS="$ARCH_FILTER"
+          fi
+          MATRIX=$(jq -cn \
+            --arg ipk "$IPK" --arg apk "$APK" \
+            --arg branches "$BRANCHES" --arg archs "$ARCHS" '
+            {
+              include: [
+                ($branches | split(" ")[]) as $b
+                | ($archs | split(" ")[])
+                | {branch: $b, arch: .}
+                | select( (.branch == $apk and (.arch == "arm_cortex-a9_vfpv3-d16" or .arch == "mips_4kec")) | not )
+                | select( (.branch == $ipk and .arch == "riscv64_generic") | not )
+              ]
+            }')
+          echo "matrix=$MATRIX" >> "$GITHUB_OUTPUT"
+          echo "Selected matrix: $MATRIX"
 
   build:
     needs: [ check, var ]
-    # selective build: skip matrix combos that do not match the
-    # workflow_dispatch arch/pkgtype filters (empty arch or pkgtype=all
-    # keeps the full matrix; tag pushes have no inputs -> full build)
-    if: >-
-      (!inputs.arch || matrix.arch == inputs.arch) &&
-      (inputs.pkgtype == 'all' || inputs.pkgtype == '' ||
-       (inputs.pkgtype == 'ipk' && matrix.branch == needs.var.outputs.IPK_BRANCH) ||
-       (inputs.pkgtype == 'apk' && matrix.branch == needs.var.outputs.APK_BRANCH))
     #if: needs.check.outputs.is_active == 'true'
     name: "${{ matrix.branch }}: ${{ matrix.arch }}"
     runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
-      matrix:
-        branch:
-          - ${{ needs.var.outputs.IPK_BRANCH }}
-          - ${{ needs.var.outputs.APK_BRANCH }}
-        arch:
-          - aarch64_cortex-a53
-          - aarch64_cortex-a72
-          - aarch64_cortex-a76
-          - aarch64_generic
-          - arm_arm1176jzf-s_vfp
-          - arm_arm926ej-s
-          - arm_cortex-a15_neon-vfpv4
-          - arm_cortex-a5_vfpv4
-          - arm_cortex-a7
-          - arm_cortex-a7_neon-vfpv4
-          - arm_cortex-a7_vfpv4
-          - arm_cortex-a8_vfpv3
-          - arm_cortex-a9
-          - arm_cortex-a9_neon
-          - arm_cortex-a9_vfpv3-d16
-          - arm_fa526
-          - arm_xscale
-          - mips64_octeonplus
-          - mips_24kc
-          - mips_4kec
-          - mips_mips32
-          - mipsel_24kc
-          - mipsel_24kc_24kf
-          - mipsel_74kc
-          - mipsel_mips32
-          - riscv64_generic
-          - x86_64
-        isTestOrFake:
-          - ${{ needs.check.outputs.test_build == 'true' || needs.check.outputs.fake_build == 'true' }}
-        exclude:
-          - branch: ${{ needs.var.outputs.APK_BRANCH }}
-            arch: arm_cortex-a9_vfpv3-d16
-          - branch: ${{ needs.var.outputs.APK_BRANCH }}
-            arch: mips_4kec
-          - branch: ${{ needs.var.outputs.IPK_BRANCH }}
-            arch: riscv64_generic
-          - { isTestOrFake: true }
-        include:
-          - branch: ${{ needs.var.outputs.IPK_BRANCH }}
-            arch: x86_64
-          - branch: ${{ needs.var.outputs.IPK_BRANCH }}
-            arch: aarch64_cortex-a53
-          - branch: ${{ needs.var.outputs.APK_BRANCH }}
-            arch: aarch64_cortex-a53
+      # matrix is generated in the "var" job (jq) with the workflow_dispatch
+      # arch/pkgtype filters already applied; tag pushes get the full matrix
+      matrix: ${{ fromJSON(needs.var.outputs.matrix) }}
     container:
       image: ghcr.io/openwrt/sdk:${{ matrix.arch }}-${{ matrix.branch }}
       options: --user root
