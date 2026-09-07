@@ -10,7 +10,7 @@ body:
       value: |
         Before sending, please:
         - Check [existing issues](https://github.com/hamptik/zapret-openwrt/issues)
-        - Read [documentation](https://github.com/hamptik/zapret-openwrt/wiki/)
+        - Read [documentation](https://github.com/hamptik/zapret-openwrt/tree/zap1/docs#readme)
 
   - type: textarea
     id: description

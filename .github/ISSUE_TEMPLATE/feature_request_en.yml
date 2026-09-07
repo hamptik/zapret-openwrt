@@ -10,7 +10,7 @@ body:
       value: |
         Before sending, please:
         - Check [existing requests](https://github.com/hamptik/zapret-openwrt/issues?q=is%3Aissue+label%3Aenhancement)
-        - Make sure the function doesn't exist in [documentation](https://github.com/hamptik/zapret-openwrt/wiki/)
+        - Make sure the function doesn't exist in [documentation](https://github.com/hamptik/zapret-openwrt/tree/zap1/docs#readme)
 
   - type: textarea
     id: summary

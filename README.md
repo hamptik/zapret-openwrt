@@ -8,7 +8,7 @@ Zapret is not a VPN! Zapret is an Anti-DPI utility!
 
 ### Для установки и настройки можете воспользоваться [Zapret Manager](https://github.com/StressOzz/Zapret-Manager)
 
-[Instructions for installing](https://github.com/hamptik/zapret-openwrt/wiki)
+[Instructions for installing](https://github.com/hamptik/zapret-openwrt/tree/zap1/docs#readme)
 
 [Download page](https://github.com/hamptik/zapret-openwrt/releases)
 

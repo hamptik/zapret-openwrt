@@ -12,7 +12,7 @@ body:
         
         Перед отправкой, пожалуйста:
         - Проверьте [существующие issues](https://github.com/hamptik/zapret-openwrt/issues)
-        - Просмотрите [документацию](https://github.com/hamptik/zapret-openwrt/wiki/)
+        - Просмотрите [документацию](https://github.com/hamptik/zapret-openwrt/tree/zap1/docs#readme)
 
   - type: textarea
     id: description

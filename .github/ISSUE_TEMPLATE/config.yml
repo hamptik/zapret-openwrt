@@ -1,7 +1,7 @@
 blank_issues_enabled: false
 contact_links:
   - name: 💬 Installation instructions / Инструкция по установке 
-    url: https://github.com/hamptik/zapret-openwrt/wiki/Installing-zapret%E2%80%90openwrt-package
+    url: https://github.com/hamptik/zapret-openwrt/blob/zap1/docs/Installing-zapret-openwrt-package.md
     about: Installation instructions / Инструкция по установке
 
   - name: 📚 Original documetation / Оригинальная документация к zapret'у
