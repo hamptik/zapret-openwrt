@@ -42,5 +42,14 @@
 			"type": "view",
 			"path": "zapret/dmnlog"
 		}
+	},
+
+	"admin/services/zapret/winsync": {
+		"title": "Win Sync",
+		"order": 25,
+		"action": {
+			"type": "view",
+			"path": "zapret/winsync"
+		}
 	}
 }

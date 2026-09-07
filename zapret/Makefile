@@ -5,7 +5,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=zapret
-PKG_VERSION:=72.20260307
+PKG_VERSION:=73.20260907
 PKG_RELEASE:=1
 
 PKG_MAINTAINER:=bol-van
@@ -121,6 +121,11 @@ define Package/$(PKG_NAME)/install
 	# install all sh-scripts
 	$(CP) ./*.sh $(1)$(ZAPRET_DIR)/
 	rm -f $(1)$(ZAPRET_DIR)/init.d.sh
+	# Install FDY default targets (Flowseal strategy testing)
+	if [ -f ./fdy-targets.txt ]; then \
+		$(INSTALL_DIR) $(1)$(ZAPRET_DIR)/fdy; \
+		$(INSTALL_DATA) ./fdy-targets.txt $(1)$(ZAPRET_DIR)/fdy/targets.txt; \
+	fi
 	# Install conf files
 	$(foreach cfg,$(ZAPRET_CONFFILES), \
 		rel="$(cfg:$(ZAPRET_DIR)/%=%)"; \

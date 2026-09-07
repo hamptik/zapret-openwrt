@@ -1,0 +1,35 @@
+# fdy-targets.txt — цели для проверки стратегий (fdy-test.sh)
+#
+# Формат:
+#   Name = "URL"      — цель проверяется через curl (HTTP/HTTPS)
+#   Name = "PING:ip"  — цель проверяется через ping (ICMP)
+#
+# Пакет устанавливает этот файл как /opt/zapret/fdy/targets.txt.
+# Свой список целей можно задать через UCI (zapret.test.targets) —
+# тогда этот файл останется нетронутым при обновлении пакета.
+
+# --- Discord ---
+Discord Main = "https://discord.com"
+Discord Gateway = "https://gateway.discord.gg"
+Discord CDN = "https://cdn.discordapp.com"
+Discord Updates = "https://updates.discord.com"
+
+# --- YouTube ---
+YouTube Web = "https://www.youtube.com"
+YouTube Short = "https://youtu.be"
+YouTube Image = "https://i.ytimg.com"
+YouTube Video Redirect = "https://redirector.googlevideo.com"
+
+# --- Google ---
+Google Main = "https://www.google.com"
+Google Gstatic = "https://www.gstatic.com"
+
+# --- Cloudflare ---
+Cloudflare Web = "https://www.cloudflare.com"
+Cloudflare CDN = "https://cdnjs.cloudflare.com"
+
+# --- DNS (ICMP) ---
+Cloudflare DNS 1.1.1.1 = "PING:1.1.1.1"
+Cloudflare DNS 1.0.0.1 = "PING:1.0.0.1"
+Google DNS 8.8.8.8 = "PING:8.8.8.8"
+Google DNS 8.8.4.4 = "PING:8.8.4.4"
