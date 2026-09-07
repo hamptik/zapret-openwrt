@@ -27,6 +27,20 @@ on:
         options:
         - true
         - false
+      arch:
+        description: 'Build only this architecture (empty = all)'
+        required: false
+        default: 'aarch64_cortex-a53'
+        type: string
+      pkgtype:
+        description: 'Package type filter'
+        required: false
+        default: 'ipk'
+        type: choice
+        options:
+        - all
+        - ipk
+        - apk
 
   push:
     tags:
@@ -121,6 +135,14 @@ jobs:
 
   build:
     needs: [ check, var ]
+    # selective build: skip matrix combos that do not match the
+    # workflow_dispatch arch/pkgtype filters (empty arch or pkgtype=all
+    # keeps the full matrix; tag pushes have no inputs -> full build)
+    if: >-
+      (!inputs.arch || matrix.arch == inputs.arch) &&
+      (inputs.pkgtype == 'all' || inputs.pkgtype == '' ||
+       (inputs.pkgtype == 'ipk' && matrix.branch == needs.var.outputs.IPK_BRANCH) ||
+       (inputs.pkgtype == 'apk' && matrix.branch == needs.var.outputs.APK_BRANCH))
     #if: needs.check.outputs.is_active == 'true'
     name: "${{ matrix.branch }}: ${{ matrix.arch }}"
     runs-on: ubuntu-24.04
